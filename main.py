@@ -19,7 +19,7 @@ def get_titles(num_worksheet):
         column_act += 1
         cl = ws.cell(row=row_ini, column=column_act)
 
-    titles = ["Type", "Name"]
+    titles = ["Type", "BD", "Name"]
     num_columns = column_act
     for row in wb.worksheets[num_worksheet].iter_rows(min_row=title_row, max_col=num_columns - 1, max_row=title_row):
         for cell in row:
@@ -56,7 +56,7 @@ if __name__ == '__main__':
         num_filas = row_act
         num_columns = column_act
         new_list = []
-        new_row = ["Type", "Name"]
+        new_row = ["Type", "Documentation", "Name"]
         titles_row = 11
         for row in ws.iter_rows(min_row=titles_row, max_col=num_columns-1, max_row=titles_row):
             for cell in row:
@@ -64,7 +64,7 @@ if __name__ == '__main__':
         new_list.append(new_row)
 
         for row in ws.iter_rows(min_row=titles_row + 1, max_col=num_columns-1, max_row=num_filas-1):
-            new_row = [ws.cell(row=1, column=1).value, ws.cell(row=5, column=2).value]
+            new_row = [ws.cell(row=1, column=1).value, ws.cell(row=3, column=2).value, ws.cell(row=5, column=2).value]
             for cell in row:
                 new_row.append(cell.value)
             new_list.append(new_row)
@@ -85,5 +85,3 @@ if __name__ == '__main__':
     HandleCSV.write_csv("./resources/views_list_full.csv", views_list)
     HandleCSV.write_csv("./resources/functions_list_full.csv", functions_list)
     HandleCSV.write_csv("./resources/procedures_list_full.csv", procedures_list)
-
-
