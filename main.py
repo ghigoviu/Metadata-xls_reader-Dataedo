@@ -6,13 +6,10 @@ def append_tables(act_list, new_table):
     for table_row in new_table[1:]:
         act_list.append(table_row)
 
-def get_titles(num_worksheet):
-    title_row = 11
+def get_titles(num_worksheet, title_row = 11):
     row_ini = title_row
     column_ini = 1
     ws = wb.worksheets[num_worksheet]
-    # Cuántas columnas tiene la tabla?
-
     column_act = column_ini
     cl = ws.cell(row=row_ini, column=column_ini)
     while cl.value is not None:
@@ -26,15 +23,47 @@ def get_titles(num_worksheet):
             titles.append(cell.value)
     return titles
 
+def append_relationships(ws_act):
+    flag = False
+    new_list = []
+    row_ini = 13
+    relationships_start = row_ini
+    for row in ws_act.iter_rows(min_row=row_ini, max_row=100, min_col=0, max_col=1):
+        for cell in row:
+            if cell.value and "Relationships" in str(cell.value):
+                print("Relationships found at:", ws_act.title, cell.coordinate)
+                flag = True
+                relationships_start = row_ini
+                break
+            row_ini += 1
+    if flag:
+        print(relationships_start)
+        for row in ws_act.iter_rows(min_row=relationships_start+1, max_row=500, min_col=1, max_col=11):
+            new_row = ["Relationship", ws_act.cell(row=3, column=2).value, ws_act.cell(row=5, column=2).value]
+            for cell in row:
+                new_row.append(cell.value)
+            if row[0].value is None:
+                print("Fin de la tabla de relationships")
+                break
+            new_list.append(new_row)
+        return new_list
+    else:
+        return flag
+
+
 if __name__ == '__main__':
     wb = load_workbook('resources/Dataedo Data Dictionary.xlsx')
 
-    tables_list = [get_titles(10)]
+    tables_list = [get_titles(0)]
     functions_list = []
     procedures_list = []
     views_list = []
+    relationships_list = []
+    relationships_list.append(["Type", "BD", "Name", "Foreign database", "Foreign table", "Type", "Primary database",
+                          "Primary table", "Join", "Title", "Relationship name", "Description", "Owner"])
     all_list = []
-    for sheet in wb.worksheets[4:]:
+    # for sheet in wb.worksheets[4:]:
+    for sheet in wb.worksheets:
         ws = sheet
         row_ini = 11
         column_ini = 1
@@ -71,6 +100,9 @@ if __name__ == '__main__':
 
         if ws.cell(row=1, column=1).value == "Table:":
             append_tables(tables_list, new_list)
+            rel_list = append_relationships(ws)
+            if rel_list is not False:
+                append_tables(relationships_list, rel_list)
         elif ws.cell(row=1, column=1).value == "View:":
             append_tables(views_list, new_list)
         elif ws.cell(row=1, column=1).value == "Function:":
@@ -80,8 +112,9 @@ if __name__ == '__main__':
         for e in new_list:
             all_list.append(e)
 
-    HandleCSV.write_csv("./resources/all_list_full.csv", all_list)
-    HandleCSV.write_csv("./resources/table_list_full.csv", tables_list)
-    HandleCSV.write_csv("./resources/views_list_full.csv", views_list)
-    HandleCSV.write_csv("./resources/functions_list_full.csv", functions_list)
-    HandleCSV.write_csv("./resources/procedures_list_full.csv", procedures_list)
+    HandleCSV.write_csv("./resources/all_list.csv", all_list)
+    HandleCSV.write_csv("./resources/table_list.csv", tables_list)
+    HandleCSV.write_csv("./resources/views_list.csv", views_list)
+    HandleCSV.write_csv("./resources/functions_list.csv", functions_list)
+    HandleCSV.write_csv("./resources/procedures_list.csv", procedures_list)
+    HandleCSV.write_csv("./resources/relationships_list.csv", relationships_list)
