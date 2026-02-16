@@ -46,14 +46,46 @@ def append_relationships(ws_act):
     else:
         return flag
 
+def append_primarykeys(ws_act):
+    flag = False
+    new_list = []
+    row_ini = 13
+    relationships_start = row_ini
+    for row in ws_act.iter_rows(min_row=row_ini, max_row=100, min_col=0, max_col=1):
+        for cell in row:
+            if cell.value and "Unique keys" in str(cell.value):
+                flag = True
+                relationships_start = row_ini
+                break
+            row_ini += 1
+    if flag:
+        for row in ws_act.iter_rows(min_row=relationships_start+1, max_row=500, min_col=1, max_col=11):
+            new_row = ["Unique key", ws_act.cell(row=3, column=2).value, ws_act.cell(row=5, column=2).value]
+            for cell in row:
+                new_row.append(cell.value)
+            if row[0].value is None:
+                break
+            new_list.append(new_row)
+        return new_list
+    else:
+        return flag
+
 if __name__ == '__main__':
     wb = load_workbook('resources/Dataedo Data Dictionary.xlsx')
 
-    tables_list = [get_titles(0)]
+    tables_list = []
     functions_list = []
     procedures_list = []
     views_list = []
+    primarykeys_list = []
     relationships_list = []
+
+    primarykeys_list.append(["Type", "BD", "Table Name", "#", "Name", "Columns", "Description", "Owner"])
+
+    tables_list.append(["Type", "BD", "Name", "Source", "#", "Path", "Name", "Title", "Data type", "Nullable"	"Default",
+                        "Identity / Auto increment column", "Computed", "Computed formula", "References", "Description",
+                        "Lookup", "Status", "Owner", "PII", "PII Data Domain", "PCI Classification", "PCI Data Domain"])
+
     relationships_list.append(["Type", "BD", "Name", "Foreign database", "Foreign table", "Type", "Primary database",
                           "Primary table", "Join", "Title", "Relationship name", "Description", "Owner"])
     all_list = []
@@ -96,8 +128,11 @@ if __name__ == '__main__':
         if ws.cell(row=1, column=1).value == "Table:":
             append_tables(tables_list, new_list)
             rel_list = append_relationships(ws)
+            pk_list = append_primarykeys(ws)
             if rel_list is not False:
                 append_tables(relationships_list, rel_list)
+            if pk_list is not False:
+                append_tables(primarykeys_list, pk_list)
         elif ws.cell(row=1, column=1).value == "View:":
             append_tables(views_list, new_list)
         elif ws.cell(row=1, column=1).value == "Function:":
@@ -112,4 +147,4 @@ if __name__ == '__main__':
     HandleCSV.write_csv("./resources/views_list_full.csv", views_list)
     HandleCSV.write_csv("./resources/functions_list_full.csv", functions_list)
     HandleCSV.write_csv("./resources/procedures_list_full.csv", procedures_list)
-    HandleCSV.write_csv("./resources/relationships_list_full.csv", relationships_list)
+    HandleCSV.write_csv("./resources/primarykeys_list_full.csv", primarykeys_list)
